@@ -16,7 +16,7 @@ def root():
     "message": f"{settings.app_name} is running",
     }
 
-@app.post("/product", response_model=ProductResponse)
+@app.get("/product", response_model=ProductResponse)
 def create_product(product: ProductCreate):
     return {
         "id": 1,
