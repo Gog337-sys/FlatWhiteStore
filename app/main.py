@@ -1,13 +1,17 @@
 from fastapi import FastAPI
-from app.api.health import router as health_router
+from app.handlers.health import router as health_router
 from app.config.config import get_settings
 from app.schemas.product import ProductCreate, ProductResponse
+from app.database import Base, engine
+
 settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     debug=settings.debug,
 )
+
+Base.metadata.create_all(bind=engine)
 
 app.include_router(health_router)
 @app.get("/")
@@ -42,3 +46,4 @@ def search_items(query: str, limit: int = 10):
         "query": query,
         "limit": limit,
     }
+
