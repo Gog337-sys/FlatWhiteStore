@@ -24,3 +24,21 @@ def create_product(product: ProductCreate):
         "size": product.size,
         "name": product.name,
     }
+@app.get("/hello")
+def hello():
+    return {
+        "message": "Hello, FastAPI!",
+    }
+
+@app.get("/items/{item_id}")
+def get_item(item_id: int):
+    return {
+        "item_id": item_id,
+    }
+
+@app.get("/search")
+def search_items(query: str, limit: int = 10):
+    return {
+        "query": query,
+        "limit": limit,
+    }
