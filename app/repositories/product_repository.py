@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import cast
 
 from app.models.product import Product
 
@@ -22,7 +23,7 @@ class ProductRepository:
         return product
 
     def get_all(self) -> list[Product]:
-        return self.db.query(Product).all()
+        return cast(list[Product], self.db.query(Product).all())
 
     def get_by_id(
             self,

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     debug: bool = True
     host: str = "127.0.0.1"
     port: int = 8000
-    database_url: str = "sqlite:///./database.db"
+    database_url: str = "sqlite:///./product.db"
     model_config = SettingsConfigDict(
     env_file=".env",
     env_file_encoding="utf-8",
