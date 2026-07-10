@@ -13,9 +13,10 @@ class ProductService:
 
     def create_product(self, schema: ProductCreate) -> Product:
         product = Product(
-            price=schema.price,   # исправлено 'prise'
+            price=schema.price,
             size=schema.size,
             name=schema.name,
+            category_id=schema.category_id,
         )
         try:
             return self.repository.create(product)

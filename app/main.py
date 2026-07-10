@@ -9,8 +9,12 @@ from app.config.config import get_settings
 from app.database import Base, engine
 from app.handlers.auth import router as auth_router
 from app.handlers.products import router as products_router
-from app.handlers.favorites import router as favorites_router
+
+from app.handlers.category import router as category_router
+
+
 from app.handlers.users import router as users_router
+from app.models.category import Category
 from app.models.product import Product
 from app.models.user import User
 
@@ -27,7 +31,8 @@ app.include_router(auth_router)
 app.include_router(products_router)
 app.include_router(users_router)
 app.include_router(health_router)
-app.include_router(favorites_router)
+
+app.include_router(category_router)
 
 
 @app.get("/")
