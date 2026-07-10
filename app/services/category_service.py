@@ -35,25 +35,18 @@ class CategoryService:
 
         return category
 
-    def update_category(
-        self,
-        category_id: int,
-        schema: CategoryUpdate,
-    ) -> Category:
-
+    def update_category(self, category_id: int, schema: CategoryUpdate) -> Category:
         category = self.get_category(category_id)
 
-        if schema.title is None and schema.author is None:
+        update_data = schema.model_dump(exclude_unset=True)
+        if not update_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one field must be provided",
+                detail="At least one field must be provided"
             )
 
-        if schema.title is not None:
-            category.title = schema.title
-
-        if schema.author is not None:
-            category.author = schema.author
+        for field, value in update_data.items():
+            setattr(category, field, value)
 
         return self.repository.update(category)
 

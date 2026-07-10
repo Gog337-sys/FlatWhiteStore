@@ -13,4 +13,4 @@ class CategoryResponse(BaseModel):
 
     id: int
     name: str
-    description: str
+    description: str | None

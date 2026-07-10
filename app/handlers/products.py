@@ -38,6 +38,7 @@ def update_product(
     db: Session = Depends(get_db)
 ):
     service = ProductService(db)
+
     return service.update_product(product_id, product_data)
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
