@@ -1,7 +1,9 @@
 from enum import Enum
+from os.path import realpath
 
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -28,3 +30,5 @@ class User(Base):
         default=UserRole.USER.value,
         nullable=False,
     )
+
+    favorites = relationship("Favorite", back_populates="user")
