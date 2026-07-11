@@ -15,10 +15,10 @@ class UserRepository:
         return cast(list[User], self.db.query(User).all())
 
     def get_by_id(self, user_id: int) -> User | None:
-        return self.db.query(User).filter(User.id == user_id).first()
+        return self.db.query(User).filter(User.id == user_id).first() # вот здесь
 
     def get_by_email(self, email: str) -> User | None:
-        return self.db.query(User).filter(User.email == email).first()
+        return self.db.query(User).filter(User.email == email).first() # вот здесь
 
     def update(self, user: User) -> User:
         return self._save(user)

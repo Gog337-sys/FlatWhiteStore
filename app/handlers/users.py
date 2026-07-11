@@ -27,7 +27,7 @@ def get_my_user(current_user: User = Depends(get_current_user)):
     response_model=list[UserResponse],
 )
 def get_admin_users(
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_role(UserRole.admin)),
     service: UserService = Depends(get_user_service),
 ):
     return service.get_users()

@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 from typing import cast
 
 from app.models.product import Product
-
+from app.models.category import Category
+from app.models.favorite import Favorite
 
 class ProductRepository:
 
@@ -22,8 +23,21 @@ class ProductRepository:
 
         return product
 
-    def get_all(self) -> list[Product]:
-        return cast(list[Product], self.db.query(Product).all())
+    def get_all(self, category_name: str | None = None, user_id: int | None = None, favorites_only: bool = False) -> list[Product]:
+        query = self.db.query(Product)
+        if category_name:
+
+            category = self.db.query(Category).filter(Category.name == category_name).first()
+            if category:
+                query = query.filter(Product.category_id == category.id)
+            else:
+                return []
+
+        if favorites_only and user_id is not None:
+            subquery = self.db.query(Favorite.product_id).filter(Favorite.user_id).subquery()
+            query = query.filter(Product.id.in_(subquery))
+
+        return cast(list[Product], query.all())
 
     def get_by_id(
             self,
