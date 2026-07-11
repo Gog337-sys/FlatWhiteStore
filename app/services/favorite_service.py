@@ -11,13 +11,11 @@ class FavoriteService:
         self.db = db
 
     def add_favorite(self, user_id: int, schema: FavoriteCreate) -> Favorite:
-        # Проверка существования продукта
         product = self.db.query(Product).filter(Product.id == schema.product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        # Проверка, не добавлен ли уже
-        existing = self.repository.get_by_user_and_product(user_id, schema.product_id)
+        existing = self.repository.get_user_and_product(user_id, schema.product_id)
         if existing:
             raise HTTPException(status_code=409, detail="Product already in favorites")
 
@@ -25,7 +23,7 @@ class FavoriteService:
         return self.repository.create(favorite)
 
     def remove_favorite(self, user_id: int, product_id: int) -> None:
-        favorite = self.repository.get_by_user_and_product(user_id, product_id)
+        favorite = self.repository.get_user_and_product(user_id, product_id)
         if not favorite:
             raise HTTPException(status_code=404, detail="Favorite not found")
         self.repository.delete(favorite)
