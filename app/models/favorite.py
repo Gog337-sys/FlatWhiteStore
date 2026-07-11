@@ -5,7 +5,7 @@ from app.database import Base
 
 
 class Favorite(Base):
-    __tablename__ = "favorite"
+    __tablename__ = "favorites"  
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
@@ -23,4 +23,3 @@ class Favorite(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "product_id", name="uq_user_product_favorite"),
     )
-

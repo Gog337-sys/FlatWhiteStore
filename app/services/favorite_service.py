@@ -1,43 +1,32 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-
 from app.models.favorite import Favorite
 from app.models.product import Product
-from app.models.user import User
 from app.repositories.favorite_repository import FavoriteRepository
-from app.repositories.product_repository import ProductRepository
+from app.schemas.favorite import FavoriteCreate
 
 class FavoriteService:
-
     def __init__(self, db: Session):
         self.repository = FavoriteRepository(db)
-        self.product_repo = ProductRepository(db)
+        self.db = db
 
-    def add_favorite(self, user: User, product_id: int) -> Favorite:
-        # Проверяем, существует ли продукт
-        product = self.product_repo.get_by_id(product_id)
-        if product is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Product not found"
-            )
+    def add_favorite(self, user_id: int, schema: FavoriteCreate) -> Favorite:
+        product = self.db.query(Product).filter(Product.id == schema.product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
 
-        # Проверяем, не добавлен ли уже в избранное
-        existing = self.repository.get_user_and_product(user.id, product_id)
+        existing = self.repository.get_user_and_product(user_id, schema.product_id)
         if existing:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Product already in favorites"
-            )
+            raise HTTPException(status_code=409, detail="Product already in favorites")
 
-    def remove_favorite(self, user: User, product_id: int) -> None:
-        favorite = self.repository.get_user_and_product(user.id, product_id)
-        if favorite is None:
-            raise  HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Favorite not found"
-            )
+        favorite = Favorite(user_id=user_id, product_id=schema.product_id)
+        return self.repository.create(favorite)
+
+    def remove_favorite(self, user_id: int, product_id: int) -> None:
+        favorite = self.repository.get_user_and_product(user_id, product_id)
+        if not favorite:
+            raise HTTPException(status_code=404, detail="Favorite not found")
         self.repository.delete(favorite)
 
-    def get_favorites(self, user: User) -> list[Product]:
-        return self.repository.get_favorites_by_user(user.id)
+    def get_user_favorites(self, user_id: int) -> list[Favorite]:
+        return self.repository.get_all_by_user(user_id)

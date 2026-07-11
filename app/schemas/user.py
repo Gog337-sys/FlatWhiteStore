@@ -37,6 +37,6 @@ class UserResponse(BaseModel):
     id: int
     email: str
     is_active: bool
-    role: UserRole
+    is_admin: bool
 
 UserRead = UserResponse
