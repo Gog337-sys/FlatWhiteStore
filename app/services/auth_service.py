@@ -15,7 +15,7 @@ class AuthService:
 
     def login(self, schema: UserLogin) -> Token:
         user = self._authenticate_user(schema.email, schema.password)
-        access_token = create_access_token(user.id)
+        access_token = create_access_token({"sub": str(user.id)})
 
         return Token(access_token=access_token)
 
