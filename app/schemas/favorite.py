@@ -1,7 +1,5 @@
 from pydantic import BaseModel
-
-from app.schemas.product  import ProductResponse
-
+from app.schemas.product import ProductResponse
 
 class FavoriteCreate(BaseModel):
     product_id: int
