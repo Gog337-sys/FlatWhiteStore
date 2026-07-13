@@ -16,6 +16,8 @@ from app.models.category import Category
 from app.models.product import Product
 from app.models.user import User
 from app.models.favorite import Favorite
+from app.handlers.users import profile_router
+
 
 settings = get_settings()
 
@@ -32,7 +34,7 @@ app.include_router(users_router)
 app.include_router(health_router)
 app.include_router(category_router)
 app.include_router(favorites_router)
-
+app.include_router(profile_router)
 
 @app.get("/")
 def read_root() -> dict[str, str]:

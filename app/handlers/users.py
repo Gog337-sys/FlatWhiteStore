@@ -8,6 +8,7 @@ from app.schemas.user import UserResponse
 from app.services.user_service import UserService
 
 router = APIRouter(tags=["users"])
+profile_router = APIRouter(prefix="/profile", tags=["profile"])
 
 
 def get_user_service(db: Session = Depends(get_db)) -> UserService:
@@ -18,8 +19,8 @@ def get_user_service(db: Session = Depends(get_db)) -> UserService:
     "/users/me",
     response_model=UserResponse,
 )
-def get_my_user(current_user: User = Depends(get_current_user)):
-    return current_user
+def get_my_user(current_user: User = Depends(get_current_user),service: UserService = Depends(get_user_service),):
+    return service.get_user_profile(current_user.id)
 
 
 @router.get(
@@ -31,3 +32,11 @@ def get_admin_users(
     service: UserService = Depends(get_user_service),
 ):
     return service.get_users()
+
+@router.get("/profile", response_model=UserResponse)
+def get_profile(
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service),
+):
+
+    return service.get_user_profile(current_user.id)

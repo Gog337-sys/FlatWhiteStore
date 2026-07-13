@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.product import ProductResponse
 from app.models.user import UserRole
 
 class UserCreate(BaseModel):
@@ -38,5 +39,6 @@ class UserResponse(BaseModel):
     email: str
     is_active: bool
     is_admin: bool
+    favorites: list[ProductResponse] = []
 
 UserRead = UserResponse
