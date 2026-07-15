@@ -77,7 +77,7 @@ class ProductService:
             )
 
         if current_user:
-            favorite = self.favorite_repo.get_by_user_and_product(current_user.id, product_id)
+            favorite = self.favorite_repo.get_by_user_product(current_user.id, product_id)
             product.is_favorite = favorite is not None
         else:
             product.is_favorite = False

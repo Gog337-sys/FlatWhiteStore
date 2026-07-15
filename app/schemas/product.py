@@ -5,7 +5,8 @@ class ProductCreate(BaseModel):
     size: int = Field(ge=32, le=60)
     name: str = Field(min_length=1, max_length=200)
     category_name: str | None = Field(default=None, min_length=1, max_length=100)
-    is_favorite: bool = Field(default=False, description="Добавить в избранное сразу")
+    image_url: str | None = Field(default=None, max_length=500)
+    is_favorite: bool | None = Field(default=False)
 
 class ProductUpdate(BaseModel):
     price: int | None = Field(default=None, ge=1500, le=9999)

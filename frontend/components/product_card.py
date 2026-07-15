@@ -74,7 +74,8 @@ def render_product_card(product: dict) -> None:
         else:
             st.info("изображение не добавлено")
 
-        st.subheader(product["title"])
-        st.write(product.get("short_description", ""))
+        st.subheader(product["name"])
+        st.write(f"Цена: {product.get('price', '—')} руб.")
+        st.write(f"Размер: {product.get('size', '—')}")
 
         render_favorite_button(product, key_prefix="card")

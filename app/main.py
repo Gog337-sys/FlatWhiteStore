@@ -4,6 +4,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 
+from fastapi.middleware.cors import CORSMiddleware
 from app.handlers.health import router as health_router
 from app.config.config import get_settings
 from app.database import Base, engine
@@ -35,6 +36,14 @@ app.include_router(health_router)
 app.include_router(category_router)
 app.include_router(favorites_router)
 app.include_router(profile_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],  # порт Streamlit
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root() -> dict[str, str]:

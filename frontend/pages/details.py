@@ -3,7 +3,6 @@ import streamlit as st
 
 from frontend.api.client import get_error_message, get_product
 from frontend.components.product_card import render_admin_actions, render_favorite_button
-from frontend.pages.profile import response
 
 product_id = st.session_state.get("selected_product_id")
 
@@ -22,13 +21,28 @@ if not response.ok:
     st.error(get_error_message(response))
     st.stop()
 
-product = response.json()
 
-st.header(product["title"])
+try:
+    product = response.json()
+except ValueError:
+    st.error("Некорректный ответ сервера (не JSON).")
+    st.stop()
+
+if not isinstance(product, dict):
+    st.error("Некорректный формат данных от сервера.")
+    st.stop()
+
+
+product_title = product.get("title", "Без названия")
+st.header(product_title)
+
 
 if product.get("image_url"):
     st.image(product["image_url"], width=500)
 
-st.write(product.get("description", ""))
+
+st.write(product.get("description", "Описание отсутствует."))
+
+
 render_favorite_button(product, key_prefix="details")
-render_admin_actions(product["id"], key_prefix="details")
+render_admin_actions(product.get("id", product_id), key_prefix="details")

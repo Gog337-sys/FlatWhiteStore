@@ -5,7 +5,8 @@ from app.database import get_db
 from app.dependencies.auth import get_current_user, get_current_user_optional
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from app.services.product_service import ProductService
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.auth import require_role
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/products", tags=["products"])
 def create_product(
     product_data: ProductCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(UserRole.admin))
 ):
     service = ProductService(db)
     return service.create_product(product_data, current_user)
