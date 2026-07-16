@@ -1,8 +1,10 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.product import ProductResponse
 from app.models.user import UserRole
 
 class UserCreate(BaseModel):
+    name: str = Field(min_length=3, max_length=15)
     email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=8, max_length=128)
 
@@ -33,10 +35,13 @@ class UserLogin(BaseModel):
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     email: str
     is_active: bool
     is_admin: bool
+
+
+class UserProfileResponse(UserResponse):
+    favorites: list[ProductResponse] = []
 
 UserRead = UserResponse

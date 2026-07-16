@@ -92,6 +92,6 @@ def require_roles(allowed_roles: Iterable[UserRole]):
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not enough permissions",
                 )
-        return current_user
 
+        return current_user
     return role_checker

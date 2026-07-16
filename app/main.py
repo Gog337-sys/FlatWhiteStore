@@ -31,6 +31,7 @@ app.include_router(products_router)
 app.include_router(users_router)
 app.include_router(health_router)
 app.include_router(category_router)
+app.include_router(favorites_router)
 
 
 @app.get("/")
