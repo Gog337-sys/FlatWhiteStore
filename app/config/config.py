@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     debug: bool = True
     host: str = "127.0.0.1"
     port: int = 8000
-    database_url: str = "sqlite:///./products.db"
+    #database_url: str = "sqlite:///./prod1ucts.db"
     secret_key: str = "change-me"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30

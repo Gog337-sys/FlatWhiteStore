@@ -7,8 +7,7 @@ from pathlib import Path
 # ---------- НАСТРОЙКИ ----------
 SAVE_LOCAL_COPY = True                # сохранить товары в data/products.json
 UPLOAD_TO_API = True                  # загружать товары в магазин через API
-
-LOCAL_JSON_OUTPUT = Path("../data/products.json")   # куда сохранять
+LOCAL_JSON_OUTPUT = Path("data/products.json")
 
 DUMMYJSON_PRODUCTS_URL = "https://dummyjson.com/products?limit=0"
 DUMMYJSON_CATEGORIES_URL = "https://dummyjson.com/products/categories"
@@ -17,8 +16,8 @@ YOUR_API_URL = "http://127.0.0.1:8000/products/"
 YOUR_CATEGORY_URL = "http://127.0.0.1:8000/category/"
 LOGIN_URL = "http://127.0.0.1:8000/auth/login"
 
-USER_EMAIL = "admin@example.com"      # ← замените
-USER_PASSWORD = "string"
+USER_EMAIL = "pivo@gmail.com"      # ← замените
+USER_PASSWORD = "1234567890"
 
 # ---------- ФУНКЦИИ ----------
 def get_token(email: str, password: str) -> str | None:

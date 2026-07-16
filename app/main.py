@@ -4,6 +4,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.handlers.health import router as health_router
 from app.config.config import get_settings
@@ -18,6 +19,7 @@ from app.models.product import Product
 from app.models.user import User
 from app.models.favorite import Favorite
 from app.handlers.users import profile_router
+from app.handlers import images
 
 
 settings = get_settings()
@@ -27,6 +29,9 @@ app = FastAPI(
     version=settings.app_version,
     debug=settings.debug,
 )
+
+MEDIA_DIR = Path(__file__).resolve().parent / "media"
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 
 Base.metadata.create_all(bind=engine)
 app.include_router(auth_router)
@@ -44,6 +49,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount(
+    "/media",
+    StaticFiles(directory=MEDIA_DIR),
+    name="media",
+)
+
+app.include_router(images.router)
 
 @app.get("/")
 def read_root() -> dict[str, str]:

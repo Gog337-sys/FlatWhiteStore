@@ -1,7 +1,7 @@
 from starlette.status import HTTP_401_UNAUTHORIZED
 import streamlit as st
-import json
 import requests
+from typing import Any
 
 BACKEND_URL = "http://127.0.0.1:8000"
 
@@ -24,12 +24,11 @@ def login(email, password):
 
 
 def request_with_authorization_header(
-        request_type: str,
-        endpoint: str,
-        params: dict | None = None,
-        payload: dict | None = None,
+    request_type: str,
+    endpoint: str,
+    params: dict | None = None,
+    payload: dict | None = None,
 ) -> requests.Response:
-
     token = st.session_state.get("access_token")
     headers = {"Authorization": f"Bearer {token}"} if token else {}
 
@@ -39,13 +38,14 @@ def request_with_authorization_header(
         response = requests.post(endpoint, headers=headers, json=payload)
     elif request_type == "PATCH":
         response = requests.patch(endpoint, headers=headers, json=payload)
+    elif request_type == "PUT":
+        response = requests.put(endpoint, headers=headers, json=payload)
     elif request_type == "DELETE":
         response = requests.delete(endpoint, headers=headers, params=params)
     else:
         raise ValueError("Неизвестный тип запроса")
 
     if response.status_code == HTTP_401_UNAUTHORIZED:
-        # При 401 очищаем авторизацию (сессию и URL)
         st.session_state.pop("access_token", None)
         st.session_state.pop("profile", None)
         st.session_state.pop("authenticated", None)
@@ -63,15 +63,19 @@ def get_error_message(response: requests.Response) -> str:
 
 
 def get_profile(token: str | None = None) -> requests.Response:
-
     if token:
         headers = {"Authorization": f"Bearer {token}"}
         return requests.get(PROFILE_ENDPOINT, headers=headers)
     return request_with_authorization_header("GET", PROFILE_ENDPOINT)
 
 
-def get_products() -> requests.Response:
-    return request_with_authorization_header("GET", PRODUCT_ENDPOINT)
+def get_products(category_name: str | None = None) -> requests.Response:
+    params = {}
+    if category_name:
+        params["category_name"] = category_name
+    if st.session_state.get("access_token"):
+        return request_with_authorization_header("GET", PRODUCT_ENDPOINT, params=params)
+    return requests.get(PRODUCT_ENDPOINT, params=params)
 
 
 def get_product(product_id: int) -> requests.Response:
@@ -85,9 +89,7 @@ def get_favorites() -> requests.Response:
 
 def add_favorite(product_id: int) -> requests.Response:
     return request_with_authorization_header(
-        "POST",
-        FAVORITES_ENDPOINT,
-        payload={"product_id": product_id}
+        "POST", FAVORITES_ENDPOINT, payload={"product_id": product_id}
     )
 
 
@@ -97,20 +99,12 @@ def remove_favorite(product_id: int) -> requests.Response:
 
 
 def create_product(payload: dict) -> requests.Response:
-    return request_with_authorization_header(
-        "POST",
-        PRODUCT_ENDPOINT,
-        payload=payload,
-    )
+    return request_with_authorization_header("POST", PRODUCT_ENDPOINT, payload=payload)
 
 
 def update_product(product_id: int, payload: dict) -> requests.Response:
     endpoint = f"{PRODUCT_ENDPOINT}{product_id}/"
-    return request_with_authorization_header(
-        "PUT",
-        endpoint,
-        payload=payload,
-    )
+    return request_with_authorization_header("PUT", endpoint, payload=payload)
 
 
 def delete_product(product_id: int) -> requests.Response:
@@ -122,11 +116,29 @@ def get_categories() -> requests.Response:
     return request_with_authorization_header("GET", CATEGORY_ENDPOINT)
 
 
-def add_category(product_id: int) -> requests.Response:
-    endpoint = f"{CATEGORY_ENDPOINT}{product_id}/"
-    return request_with_authorization_header("POST", endpoint)
+def create_category(name: str) -> requests.Response:
+    return request_with_authorization_header(
+        "POST", CATEGORY_ENDPOINT, payload={"name": name}
+    )
 
 
-def remove_category(product_id: int) -> requests.Response:
-    endpoint = f"{CATEGORY_ENDPOINT}{product_id}/"
+def delete_category(category_id: int) -> requests.Response:
+    endpoint = f"{CATEGORY_ENDPOINT}{category_id}/"
     return request_with_authorization_header("DELETE", endpoint)
+
+
+def upload_image(uploaded_file: Any) -> dict:
+
+    files = {
+        "file": (
+            uploaded_file.name,
+            uploaded_file.getvalue(),
+            uploaded_file.type,
+        )
+    }
+    response = requests.post(
+        f"{BACKEND_URL}/images/upload",
+        files=files,
+    )
+    response.raise_for_status()
+    return response.json()

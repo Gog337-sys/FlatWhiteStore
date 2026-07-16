@@ -43,7 +43,22 @@ if not products:
     st.stop()
 
 
+
 columns = st.columns(3)
 for index, product in enumerate(products):
     with columns[index % 3]:
         render_product_card(product)
+
+filter_category = st.session_state.get("filter_category", None)
+
+if filter_category:
+    st.info(f"Показаны товары категории «{filter_category}»")
+    if st.button("Сбросить фильтр"):
+        st.session_state.pop("filter_category", None)
+        st.rerun()
+
+try:
+    response = get_products(category_name=filter_category)  # передаём параметр
+except requests.RequestException:
+    st.error("Backend недоступен.")
+    st.stop()

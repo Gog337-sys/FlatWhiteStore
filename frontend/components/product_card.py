@@ -1,81 +1,80 @@
-import  requests
 import streamlit as st
+import requests
 
-from frontend.api.client import (
-    add_favorite,
-    delete_product,
-    get_error_message,
-    remove_favorite,
-)
-from frontend.auth.state import is_admin, is_authenticated
+from frontend.api.client import add_favorite, remove_favorite
+from frontend.auth.state import is_authenticated, is_admin
 
 
+def render_product_card(product: dict, key_prefix: str = "") -> None:
 
-def render_favorite_button(product: dict, key_prefix: str) -> None:
-    if not is_authenticated():
-        st.caption("Войдите, чтобы добавить запись в избранное.")
-        return
+    name = product.get("name") or product.get("title", "Без названия")
 
-    product_id = product["id"]
-    is_favorite = product.get("is_favorite", False)
-    button_text = "Убрать из избранного" if is_favorite else "В избранное"
+    product_id = product.get("id", 0)
+    unique_key = f"{key_prefix}_{product_id}" if key_prefix else str(product_id)
 
-    if st.button(button_text, key=f"{key_prefix}_favorite_{product_id}"):
+    st.subheader(name)
+
+    image_url = product.get("image_url") or product.get("thumbnail")
+    if image_url:
         try:
-            if is_favorite:
-                response = remove_favorite(product_id)
-            else:
-                response = add_favorite(product_id)
-        except requests.RequestException:
-            st.error("Не удалось выполнить запрос к backend")
-            return
+            st.image(image_url, width=200)
+        except Exception:
+            st.info("Не удалось загрузить изображение")
+    else:
+        st.info("Изображение не добавлено")
 
-        if response.ok:
-            st.rerun()
+    desc = product.get("description", "")
+    if desc:
+        st.caption(desc[:150] + "…" if len(desc) > 150 else desc)
+
+    price = product.get("price")
+    size = product.get("size")
+    if price is not None:
+        st.write(f"💰 Цена: {price} руб.")
+    if size is not None:
+        st.write(f"📏 Размер: {size}")
+
+    if is_authenticated():
+        is_fav = product.get("is_favorite", False)
+
+        if is_fav:
+            if st.button("❤️ В избранном", key=f"rm_fav_{unique_key}"):
+                try:
+                    resp = remove_favorite(product_id)
+                    if resp.ok:
+                        st.success("Удалено из избранного")
+                        st.rerun()
+                    else:
+                        st.error("Не удалось удалить из избранного")
+                except requests.RequestException:
+                    st.error("Ошибка соединения с сервером")
         else:
-            st.error(get_error_message(response))
+            if st.button("🤍 Добавить в избранное", key=f"add_fav_{unique_key}"):
+                try:
+                    resp = add_favorite(product_id)
+                    if resp.ok:
+                        st.success("Добавлено в избранное!")
+                        st.rerun()
+                    else:
+                        st.error("Не удалось добавить в избранное")
+                except requests.RequestException:
+                    st.error("Ошибка соединения с сервером")
 
-def render_admin_actions(product_id: int, key_prefix: str) -> None:
-    if not is_admin():
-        return
+    if is_admin():
+        with st.expander("⚙️ Администрирование"):
+            if st.button("✏️ Редактировать", key=f"edit_{unique_key}"):
+                st.session_state["edit_product_id"] = product_id
+                st.switch_page("pages/edit_product.py")
+            if st.button("🗑️ Удалить", key=f"delete_{unique_key}"):
+                from frontend.api.client import delete_product
+                try:
+                    resp = delete_product(product_id)
+                    if resp.ok:
+                        st.success("Товар удалён")
+                        st.rerun()
+                    else:
+                        st.error("Не удалось удалить товар")
+                except requests.RequestException:
+                    st.error("Ошибка соединения с сервером")
 
-    edit_column, delete_column = st.columns(2)
-
-    if edit_column.button(
-        "Редактировать",
-        key=f"{key_prefix}_edit_{product_id}",
-    ):
-        st.session_state["edit_product_id"] = product_id
-        st.switch_page("pages/edit_product.py")
-
-    if delete_column.button(
-        "Удалить",
-        key=f"{key_prefix}_delete{product_id}",
-        type="primary",
-    ):
-        try:
-            response = delete_product(product_id)
-        except requests.RequestException:
-            st.error("Не удалось выполнить запрос к backend.")
-            return
-
-        if response.ok:
-            st.success("Запись удаленна")
-            st.switch_page("pages/catalog.py")
-        else:
-            st.error(get_error_message(response))
-
-def render_product_card(product: dict) -> None:
-    product_id = product["id"]
-
-    with st.container(border=True):
-        if product.get("image_url"):
-            st.image(product["image_url"], use_container_width=True)
-        else:
-            st.info("изображение не добавлено")
-
-        st.subheader(product["name"])
-        st.write(f"Цена: {product.get('price', '—')} руб.")
-        st.write(f"Размер: {product.get('size', '—')}")
-
-        render_favorite_button(product, key_prefix="card")
+    st.divider()

@@ -1,77 +1,71 @@
-import requests
 import streamlit as st
+import requests
 
-from frontend.api.client import create_product, get_error_message
+from frontend.api.client import (
+    create_product,
+    update_product,
+    upload_image,
+    get_error_message,
+    BACKEND_URL,
+)
 from frontend.auth.state import require_admin
 
 require_admin()
-
 st.header("Новая запись")
 
 with st.form("create_item_form"):
-    name = st.text_input("Название", key="name")
-    price = st.text_input("Цена", key="price")
-    size = st.text_input("Размер", key="size")
-    category_name = st.text_input("Название категории", key="category_name")
-    image_url = st.text_input("Ссылка на изображение", key="image_url")
+    name = st.text_input("Название")
+    price = st.number_input("Цена", min_value=1500, max_value=9999, step=100)
+    size = st.number_input("Размер", min_value=32, max_value=60, step=1)
+    category_name = st.text_input("Категория")
+    description = st.text_area("Описание")
+    image_url = st.text_input("Ссылка на изображение (URL)")
+    uploaded_file = st.file_uploader("Или загрузите файл", type=["jpg", "jpeg", "png"])
     submitted = st.form_submit_button("Создать")
 
 if submitted:
-
-    errors = []
     if not name.strip():
-        errors.append("Укажите название.")
-    if not category_name.strip():
-        errors.append("Укажите название категории.")
-
-
-    try:
-        price_int = int(price)
-        size_int = int(size)
-    except ValueError:
-        errors.append("Цена и размер должны быть целыми числами.")
-    else:
-        if price_int <= 0:
-            errors.append("Цена должна быть положительным числом.")
-        if size_int <= 0:
-            errors.append("Размер должен быть положительным числом.")
-
-
-    if errors:
-        for error in errors:
-            st.error(error)
+        st.error("Введите название")
         st.stop()
-
 
     payload = {
         "name": name.strip(),
-        "price": price_int,
-        "size": size_int,
-        "category_name": category_name.strip(),
+        "price": price,
+        "size": size,
+        "category_name": category_name.strip() or None,
+        "description": description.strip() or "",
         "image_url": image_url.strip() or None,
     }
 
-
     try:
-        response = create_product(payload)
+        resp = create_product(payload)
     except requests.RequestException:
-        st.error("Не удалось выполнить запрос к backend.")
+        st.error("Сервер недоступен")
         st.stop()
 
-    if response.status_code in (200, 201):
+    if resp.status_code not in (200, 201):
+        st.error(get_error_message(resp))
+        st.stop()
 
-        try:
-            created_product = response.json()
-        except ValueError:
-            st.error("Некорректный ответ сервера (не JSON).")
-            st.stop()
+    product = resp.json()
+    product_id = product["id"]
 
-        if not isinstance(created_product, dict) or "id" not in created_product:
-            st.error("Ответ сервера не содержит ожидаемых данных о продукте.")
-            st.stop()
+    # Если был выбран файл, загружаем его и обновляем товар
+    if uploaded_file is not None:
+        with st.spinner("Загружаю изображение..."):
+            try:
+                image_data = upload_image(uploaded_file)  # (1)
+                photo_path = image_data.get("photo_path")  # (2)
+                if photo_path:
+                    from frontend.api.client import BACKEND_URL
 
-        st.session_state["selected_product_id"] = created_product["id"]
-        st.success("Товар успешно создан!")
-        st.switch_page("pages/details.py")
-    else:
-        st.error(get_error_message(response))
+                    full_image_url = f"{BACKEND_URL}{photo_path}"
+                    update_resp = update_product(product_id, {"image_url": full_image_url})
+                    if update_resp.ok:
+                        st.success("Товар создан и изображение загружено!")
+                    else:
+                        st.warning("Товар создан, но не удалось прикрепить изображение")
+                else:
+                    st.warning("Сервер вернул ответ без photo_path")
+            except requests.RequestException:
+                st.warning("Ошибка при загрузке изображения")
